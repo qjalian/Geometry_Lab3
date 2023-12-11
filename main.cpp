@@ -151,7 +151,6 @@ public:
 		_image.create(_image.getSize().x, _image.getSize().y, sf::Color::Cyan);
 		_texture.loadFromImage(_image);
 	}
-	
 
 private:
 	sf::Color _firstColor;
@@ -160,45 +159,19 @@ private:
 	sf::Image _image;
 	int _getNorm;
 };
-void HandleUserInput(sf::RenderWindow& window, const sf::Event& event)
-	{
-		switch (event.type)
-		{
-			case sf::Event::Closed:
-				window.close();
-				break;
-			case sf::Event::MouseButtonPressed:
-				{
-					
-					sf::Vector2f startPoint = window.mapPixelToCoords({event.mouseButton.x, event.mouseButton.y});
-	
-					for (int i = 0; i < 100; ++i)
-					{
-						
-						sf::Vector2f gradient;
-						float epsilon = 0.01f;
-	
-						gradient.x = (complexFunction(startPoint + sf::Vector2f(epsilon, 0)) - complexFunction(startPoint)) / epsilon;
-						gradient.y = (complexFunction(startPoint + sf::Vector2f(0, epsilon)) - complexFunction(startPoint)) / epsilon;
-	
-						
-						startPoint -= 0.01f * gradient; // You can adjust the step size here
-					}
-				}
-				break;
-			default:
-				break;
-		}
+
+void HandleUserInput(sf::RenderWindow &window, const sf::Event &event, RFuncSprites &currentSprite);
+
 int main()
 {
-
-	sf::RenderWindow window(sf::VideoMode(500, 500), "Lab3");
+	sf::RenderWindow window(sf::VideoMode(400, 400), "Lab3");
 	window.setFramerateLimit(60);
 	if (!ImGui::SFML::Init(window))
 	{
 		std::cout << "ImGui initialization failed\n";
 		return -1;
 	}
+
 	auto spriteSize = sf::Vector2u{window.getSize().x, window.getSize().y};
 
 	RFuncSprites RFuncSpritesNx;
@@ -206,12 +179,15 @@ int main()
 
 	RFuncSprites RFuncSpritesNy;
 	RFuncSpritesNy.create(spriteSize, 1);
+	RFuncSpritesNy.setPosition(spriteSize.x, 0);
 
 	RFuncSprites RFuncSpritesNz;
 	RFuncSpritesNz.create(spriteSize, 2);
+	RFuncSpritesNz.setPosition(0, spriteSize.y);
 
 	RFuncSprites RFuncSpritesNw;
 	RFuncSpritesNw.create(spriteSize, 3);
+	RFuncSpritesNw.setPosition(spriteSize.x, spriteSize.y);
 
 	std::function<float(const sf::Vector2f &)> rFunctions[6];
 
@@ -224,7 +200,7 @@ int main()
 
 	std::function<float(const sf::Vector2f &)> complexFunction = [&rFunctions](const sf::Vector2f &point) -> float
 	{
-		return ROr(ROr(RAnd(RAnd(RAnd(rFunctions[0](point), rFunctions[1](point)), rFunctions[2](point)),
+		return RAnd(RAnd(RAnd(ROr(RAnd(rFunctions[0](point), rFunctions[1](point)), rFunctions[2](point)),
 							  rFunctions[3](point)),
 						 rFunctions[4](point)),
 					rFunctions[5](point));
@@ -236,31 +212,28 @@ int main()
 	pathTexture.clear(sf::Color::Transparent);
 
 	int selectedMObrazIndex = 0;
-	bool isMouseDown = false; 
-	sf::Vector2f startPoint; 
 
 	sf::Clock deltaClock;
 
-	    while (window.isOpen())
-	    {
-	        sf::Event event;
-	        while (window.pollEvent(event))
-	        {
-	            ImGui::SFML::ProcessEvent(event);
-	
-	            if (event.type == sf::Event::Closed)
-	            {
-	                window.close();
-	            }
-	            else if (event.type == sf::Event::MouseButtonPressed)
-	            {
-	                HandleUserInput(window, event, complexFunction);
-	            }
-	        }
+	while (window.isOpen())
+	{
+		sf::Event event;
+		while (window.pollEvent(event))
+		{
+			ImGui::SFML::ProcessEvent(event);
+
+			HandleUserInput(window, event, RFuncSpritesNx);
+			HandleUserInput(window, event, RFuncSpritesNy);
+			HandleUserInput(window, event, RFuncSpritesNz);
+			HandleUserInput(window, event, RFuncSpritesNw);
+
+			if (event.type == sf::Event::Closed)
+			{
+				window.close();
+			}
+		}
 
 		ImGui::SFML::Update(window, deltaClock.restart());
-
-	
 
 		ImGui::Begin("Menu");
 		const char *mobrazNames[] = {"M-Obraz Nx", "M-Obraz Ny", "M-Obraz Nz", "M-Obraz Nw"};
@@ -274,7 +247,7 @@ int main()
 					  static_cast<sf::Uint8>(firstColor.z * 255), static_cast<sf::Uint8>(firstColor.w * 255));
 
 		auto sfSecondColor =
-			sf::Color(static_cast<sf::Uint8>(secondColor.x * 255), static_cast<sf::Uint8>(secondColor.y * 255),
+            sf::Color(static_cast<sf::Uint8>(secondColor.x * 255), static_cast<sf::Uint8>(secondColor.y * 255),
 					  static_cast<sf::Uint8>(secondColor.z * 255), static_cast<sf::Uint8>(secondColor.w * 255));
 
 		switch (selectedMObrazIndex)
@@ -296,7 +269,7 @@ int main()
 			RFuncSpritesNw.upd(sfFirstColor, sfSecondColor);
 			break;
 		default:
-			
+			// Handle error or default case
 			break;
 		}
 
@@ -316,7 +289,9 @@ int main()
 			case 3:
 				RFuncSpritesNw.saveImg("nw.png");
 				break;
-		
+			default:
+				// Handle error or default case
+				break;
 			}
 		}
 		if (ImGui::Button("Clear Paths"))
@@ -326,21 +301,23 @@ int main()
 			RFuncSpritesNy.clearPath();
 			RFuncSpritesNz.clearPath();
 			RFuncSpritesNw.clearPath();
-			
+			// Clear paths for other sprites if needed
 		}
 		ImGui::End();
 
 		complexFunction = rFunctions[selectedMObrazIndex];
 
-		
+		// Draw the path on the render texture
 		pathTexture.draw(RFuncSpritesNx);
 
-		
+		// Clear the window
 		window.clear();
 
+		// Draw the M-Obraz sprites
 		RFuncSpritesNx.DrawRFunc(complexFunction, subSpace);
 		RFuncSpritesNx.upd(sfFirstColor, sfSecondColor);
 
+		// Draw the path render texture on top
 		sf::Sprite pathSprite(pathTexture.getTexture());
 		window.draw(pathSprite);
 
@@ -353,3 +330,35 @@ int main()
 
 	return 0;
 }
+
+void HandleUserInput(sf::RenderWindow &window, const sf::Event &event, RFuncSprites &currentSprite)
+{
+	switch (event.type)
+	{
+	case sf::Event::Closed:
+		window.close();
+		break;
+	case sf::Event::MouseButtonPressed:
+		if (event.mouseButton.button == sf::Mouse::Left)
+		{
+			sf::Vector2f mousePos = window.mapPixelToCoords(sf::Vector2i(event.mouseButton.x, event.mouseButton.y));
+
+			sf::Color firstColor = sf::Color::White; 
+			sf::Color secondColor = sf::Color::White; 
+
+			currentSprite.upd(firstColor, secondColor); 
+
+			currentSprite.DrawRFunc(
+				[&mousePos](const sf::Vector2f &point) -> float
+				{
+					return std::sqrt((point.x - mousePos.x) * (point.x - mousePos.x) +
+									 (point.y - mousePos.y) * (point.y - mousePos.y));
+				},
+				sf::FloatRect(-10.f, -10.f, 20.f, 20.f));
+		}
+		break;
+	default:
+		break;
+	}
+}
+
