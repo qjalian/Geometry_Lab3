@@ -151,36 +151,7 @@ public:
 		_image.create(_image.getSize().x, _image.getSize().y, sf::Color::Cyan);
 		_texture.loadFromImage(_image);
 	}
-	void HandleUserInput(sf::RenderWindow& window, const sf::Event& event)
-	{
-		switch (event.type)
-		{
-			case sf::Event::Closed:
-				window.close();
-				break;
-			case sf::Event::MouseButtonPressed:
-				{
-					// Делаем спуск
-					sf::Vector2f startPoint = window.mapPixelToCoords({event.mouseButton.x, event.mouseButton.y});
 	
-					for (int i = 0; i < 100; ++i)
-					{
-						// Estimate gradient using finite differences
-						sf::Vector2f gradient;
-						float epsilon = 0.01f;
-	
-						gradient.x = (complexFunction(startPoint + sf::Vector2f(epsilon, 0)) - complexFunction(startPoint)) / epsilon;
-						gradient.y = (complexFunction(startPoint + sf::Vector2f(0, epsilon)) - complexFunction(startPoint)) / epsilon;
-	
-						// Update the starting point using the gradient
-						startPoint -= 0.01f * gradient; // You can adjust the step size here
-					}
-				}
-				break;
-			default:
-				break;
-		}
-	}
 
 private:
 	sf::Color _firstColor;
@@ -189,7 +160,35 @@ private:
 	sf::Image _image;
 	int _getNorm;
 };
-
+void HandleUserInput(sf::RenderWindow& window, const sf::Event& event)
+	{
+		switch (event.type)
+		{
+			case sf::Event::Closed:
+				window.close();
+				break;
+			case sf::Event::MouseButtonPressed:
+				{
+					
+					sf::Vector2f startPoint = window.mapPixelToCoords({event.mouseButton.x, event.mouseButton.y});
+	
+					for (int i = 0; i < 100; ++i)
+					{
+						
+						sf::Vector2f gradient;
+						float epsilon = 0.01f;
+	
+						gradient.x = (complexFunction(startPoint + sf::Vector2f(epsilon, 0)) - complexFunction(startPoint)) / epsilon;
+						gradient.y = (complexFunction(startPoint + sf::Vector2f(0, epsilon)) - complexFunction(startPoint)) / epsilon;
+	
+						
+						startPoint -= 0.01f * gradient; // You can adjust the step size here
+					}
+				}
+				break;
+			default:
+				break;
+		}
 int main()
 {
 
@@ -242,7 +241,7 @@ int main()
 
 	sf::Clock deltaClock;
 
-	   while (window.isOpen())
+	    while (window.isOpen())
 	    {
 	        sf::Event event;
 	        while (window.pollEvent(event))
@@ -255,7 +254,7 @@ int main()
 	            }
 	            else if (event.type == sf::Event::MouseButtonPressed)
 	            {
-	                HandleUserInput(window, event);
+	                HandleUserInput(window, event, complexFunction);
 	            }
 	        }
 
