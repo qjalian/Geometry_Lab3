@@ -151,6 +151,36 @@ public:
 		_image.create(_image.getSize().x, _image.getSize().y, sf::Color::Cyan);
 		_texture.loadFromImage(_image);
 	}
+	void HandleUserInput(sf::RenderWindow& window, const sf::Event& event)
+	{
+		switch (event.type)
+		{
+			case sf::Event::Closed:
+				window.close();
+				break;
+			case sf::Event::MouseButtonPressed:
+				{
+					// Делаем спуск
+					sf::Vector2f startPoint = window.mapPixelToCoords({event.mouseButton.x, event.mouseButton.y});
+	
+					for (int i = 0; i < 100; ++i)
+					{
+						// Estimate gradient using finite differences
+						sf::Vector2f gradient;
+						float epsilon = 0.01f;
+	
+						gradient.x = (complexFunction(startPoint + sf::Vector2f(epsilon, 0)) - complexFunction(startPoint)) / epsilon;
+						gradient.y = (complexFunction(startPoint + sf::Vector2f(0, epsilon)) - complexFunction(startPoint)) / epsilon;
+	
+						// Update the starting point using the gradient
+						startPoint -= 0.01f * gradient; // You can adjust the step size here
+					}
+				}
+				break;
+			default:
+				break;
+		}
+	}
 
 private:
 	sf::Color _firstColor;
@@ -186,7 +216,7 @@ int main()
 
 	std::function<float(const sf::Vector2f &)> rFunctions[6];
 
-	rFunctions[0] = [](const sf::Vector2f &point) -> float { };
+	rFunctions[0] = [](const sf::Vector2f &point) -> float { return std::sin(point.x) - std::cos(point.y); };
 	rFunctions[1] = [](const sf::Vector2f &point) -> float { return point.x * point.y - 10; };
 	rFunctions[2] = [](const sf::Vector2f &point) -> float { return std::sin(point.x) * std::cos(point.y); };
 	rFunctions[3] = [](const sf::Vector2f &point) -> float { return std::cos(point.x + point.y); };
@@ -212,42 +242,26 @@ int main()
 
 	sf::Clock deltaClock;
 
-	while (window.isOpen())
-	{
-		sf::Event event;
-		while (window.pollEvent(event))
-		{
-			ImGui::SFML::ProcessEvent(event);
-
-			if (event.type == sf::Event::Closed)
-			{
-				window.close();
-			}
-			else if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left)
-			{
-				isMouseDown = true;
-				startPoint = window.mapPixelToCoords({event.mouseButton.x, event.mouseButton.y});
-			}
-			else if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left)
-			{
-				isMouseDown = false;
-			}
-		}
+	   while (window.isOpen())
+	    {
+	        sf::Event event;
+	        while (window.pollEvent(event))
+	        {
+	            ImGui::SFML::ProcessEvent(event);
+	
+	            if (event.type == sf::Event::Closed)
+	            {
+	                window.close();
+	            }
+	            else if (event.type == sf::Event::MouseButtonPressed)
+	            {
+	                HandleUserInput(window, event);
+	            }
+	        }
 
 		ImGui::SFML::Update(window, deltaClock.restart());
 
-		if (isMouseDown)
-		{
-			sf::Vector2f gradient;
-			float epsilon = 0.01f;
-
-			gradient.x =
-				(complexFunction(startPoint + sf::Vector2f(epsilon, 0)) - complexFunction(startPoint)) / epsilon;
-			gradient.y =
-				(complexFunction(startPoint + sf::Vector2f(0, epsilon)) - complexFunction(startPoint)) / epsilon;
-
-			startPoint -= 0.01f * gradient; 
-		}
+	
 
 		ImGui::Begin("Menu");
 		const char *mobrazNames[] = {"M-Obraz Nx", "M-Obraz Ny", "M-Obraz Nz", "M-Obraz Nw"};
