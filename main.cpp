@@ -301,23 +301,16 @@ int main()
 			RFuncSpritesNy.clearPath();
 			RFuncSpritesNz.clearPath();
 			RFuncSpritesNw.clearPath();
-			// Clear paths for other sprites if needed
+			
 		}
 		ImGui::End();
 
 		complexFunction = rFunctions[selectedMObrazIndex];
-
-		// Draw the path on the render texture
+		
 		pathTexture.draw(RFuncSpritesNx);
-
-		// Clear the window
 		window.clear();
-
-		// Draw the M-Obraz sprites
 		RFuncSpritesNx.DrawRFunc(complexFunction, subSpace);
 		RFuncSpritesNx.upd(sfFirstColor, sfSecondColor);
-
-		// Draw the path render texture on top
 		sf::Sprite pathSprite(pathTexture.getTexture());
 		window.draw(pathSprite);
 
