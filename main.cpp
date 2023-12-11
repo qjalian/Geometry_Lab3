@@ -195,7 +195,7 @@ int main()
 
 	std::function<float(const sf::Vector2f &)> complexFunction = [&rFunctions](const sf::Vector2f &point) -> float
 	{
-		return RAnd(RAnd(RAnd(ROr(RAnd(rFunctions[0](point), rFunctions[1](point)), rFunctions[2](point)),
+		return ROr(ROr(RAnd(RAnd(RAnd(rFunctions[0](point), rFunctions[1](point)), rFunctions[2](point)),
 							  rFunctions[3](point)),
 						 rFunctions[4](point)),
 					rFunctions[5](point));
